@@ -1,0 +1,7 @@
+This package only provides bash completion scripts for scripts in the
+rosinstall package.
+The scripts here were moved outside of roinstall due to several reasons:
+
+* They are only valid on Linux + bash systems
+* The install location is an absolute path (/etc/bash-completion.d) which is only valid on some systems
+* The easy install tool fails with SandboxViolation even for targeted Linux systems, whereas pip installs fine

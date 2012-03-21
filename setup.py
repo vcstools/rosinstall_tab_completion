@@ -2,7 +2,7 @@ from setuptools import setup
 
     
 setup(name='rosinstall_shellcompletion',
-      version= version,
+      version= '0.0.1',
       install_requires = ['rosinstall'],
       data_files=[('/etc/bash_completion.d', ['contrib/rosws.bash',
                                               'contrib/rosinstall.bash'])],
