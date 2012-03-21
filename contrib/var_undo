@@ -1,0 +1,114 @@
+# Software License Agreement (BSD License)
+#
+# Copyright (c) 2010, Willow Garage, Inc.
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#
+#  * Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#  * Redistributions in binary form must reproduce the above
+#    copyright notice, this list of conditions and the following
+#    disclaimer in the documentation and/or other materials provided
+#    with the distribution.
+#  * Neither the name of Willow Garage, Inc. nor the names of its
+#    contributors may be used to endorse or promote products derived
+#    from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+# COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+
+# This file should be sourceable from bash and zsh scripts
+#
+# The purpose of the functions of this script is to make a best effort
+# to UNDO a single set of past append/prepend changes to an
+# environment variable, even if more append/prepend actions have
+# happened since. 
+#
+# The purpose is NOT to just restore a var to a previous state.
+# example, var FOO has state X:Y
+# we make the change to A:X:Y:B this is the change we store for undoing later
+# we make further additions to K:A:X:Y:B:L
+# Now we undo the change, and get K:X:Y:L, which is not equal to X:Y
+#
+# There are many corner cases that could happen and
+# where the result is not an undo, especially when other scripts do
+# not just append/prepend, or when their append / prepend includes the
+# same value as the orignal.  the functions works by setting
+# additional environment variables.
+#
+# Also currently the script relies on sed but does not escape regular
+# expression symbols like backslashes, stars, etc from variables
+#
+# Author: Thibault Kruse
+
+# constants local to this script
+_var_undo_backup_var_name_suffix=_VAR_UNDO_BACKUP
+_var_undo_pre_var_name_suffix=_VAR_UNDO_PREFIX
+_var_undo_suf_var_name_suffix=_VAR_UNDO_SUFFIX
+
+
+# uses env to lookup an env var by name by the first argument $1
+_var_undo_get_env_var () {
+    echo `/usr/bin/env |grep ^$1=|sed -s 's/'"$1"'=//'`
+}
+
+# stores an env var with name $1 to a designated backup env var 
+_var_undo_backup_var () {
+    export $1$_var_undo_backup_var_name_suffix=`_var_undo_get_env_var $1`
+}
+
+_var_undo_backup_diff_var () {
+    local new_value old_value new_value_esc old_value_esc
+
+    # stores the diff pre and suffix between current and stored value of env var with name $1 
+    old_value=`_var_undo_get_env_var $1$_var_undo_backup_var_name_suffix`
+    old_value_esc=`echo "$old_value" | sed -s 's,\([\[\.\\\*\^\$\"]\|\]\),\\\\\1,g'`
+    new_value=`_var_undo_get_env_var $1`
+
+    if [ -n "$old_value" -a "$new_value" != "$old_value" ]; then
+        # get suffix by replacing in new var the old var with nil
+        if [ -n "$new_value" -a "$new_value" != "$old_value" ]; then
+            export $1$_var_undo_suf_var_name_suffix=`echo "$new_value" |sed -s "s,.*${old_value_esc}\(.*\),\1,"`
+            export $1$_var_undo_pre_var_name_suffix=`echo "$new_value" |sed -s "s,\(.*\)${old_value_esc}.*,\1,"`
+        fi
+    else
+        # old value was empty
+        if [ "$new_value" != "$old_value" ]; then
+            export $1$_var_undo_pre_var_name_suffix=$new_value
+        fi
+    fi
+}
+
+_var_undo_restore_var () {
+    local new_value old_value old_prefix old_suffix old_value_esc old_prefix_esc old_suffix_esc
+    # removes from the middle of a given var of name $1 previously stored prefix and suffix (that may now not be pre or suffixes anymore)
+    ## escape backslash for windows paths
+    new_value=`/usr/bin/env |grep ^$1=|sed -s 's/'"$1"'=//'`
+    old_value=`_var_undo_get_env_var $1$_var_undo_backup_var_name_suffix`
+    old_value_esc=`echo $old_value | sed -s 's,\([\[\.\\\*\^\$\"]\|\]\),\\\\\1,g'`
+    old_prefix=`_var_undo_get_env_var $1$_var_undo_pre_var_name_suffix`
+    old_prefix_esc=`echo $old_prefix | sed -s 's,\([\[\.\\\*\^\$\"]\|\]\),\\\\\1,g'`
+    old_suffix=`_var_undo_get_env_var $1$_var_undo_suf_var_name_suffix`
+    old_suffix_esc=`echo $old_suffix | sed -s 's,\([\[\.\\\*\^\$\"]\|\]\),\\\\\1,g'`
+    if [ -n "$old_prefix" -o -n "$old_suffix" ]; then
+        export $1=`echo $new_value | sed -s "s,${old_prefix_esc}${old_value_esc}${old_suffix_esc},${old_value_esc},"`
+    fi
+    unset $1$_var_undo_backup_var_name_suffix
+    unset $1$_var_undo_pre_var_name_suffix
+    unset $1$_var_undo_suf_var_name_suffix
+
+}
+
