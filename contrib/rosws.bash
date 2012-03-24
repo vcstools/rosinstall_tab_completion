@@ -36,8 +36,9 @@
 
 # Programmable completion for the rosws command under bash. Source
 # this file (or on some systems add it to ~/.bash_completion and start a new
-# shell) and bash's completion mechanism will know all about bzr's options!
+# shell)
 
+# put here to be extendable
 if [ -z "$ROSWS_BASE_COMMANDS" ]; then
   _ROSWS_BASE_COMMANDS="help init set merge info remove regenerate diff status update --version"
 fi
@@ -116,9 +117,6 @@ _rosws_complete()
     ;;
   info)
     cmdOpts="-t --target-workspace --data-only --no-pkg-path --pkg-path-only --localnames-only --paths-only"
-    ;;
-  help|h|\?)
-    cmdOpts="$cmds $qOpts"
     ;;
   *)
     ;;
@@ -246,6 +244,5 @@ _rosws_complete()
 
 }
 complete -F _rosws_complete -o default rosws
-complete -F _rosws_complete -o default py-rosws
 
 
