@@ -91,12 +91,12 @@ function _roscomplete_rosws {
         else
             case ${=${(s: :)words}[2]} in
             info|diff|status|remove|update)
-              opts=`rosws info --only=localname 2> /dev/null | sed -s 's,:, ,g'`
+              opts=`rosws info --only=localname 2> /dev/null | sed 's,:, ,g'`
               reply=(${=opts})
             ;;
             set)
               if [[ ${CURRENT} == 3 ]]; then
-                  opts=`rosws info --only=localname 2> /dev/null | sed -s 's,:, ,g'`
+                  opts=`rosws info --only=localname 2> /dev/null | sed 's,:, ,g'`
                   reply=(${=opts})
               elif [[ ${CURRENT} == 4 ]]; then
                   opts=`rosws info ${=${(s: :)words}[3]} --only=uri 2> /dev/null`
