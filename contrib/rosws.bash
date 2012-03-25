@@ -65,19 +65,19 @@ _rosws_complete()
      [[ "$cur" != -* ]] ; then
     case ${COMP_WORDS[1]} in
     info|diff|status|remove|update)
-      cmdOpts=`rosws info --only=localname 2> /dev/null | sed -s 's,:, ,g'`
+      cmdOpts=`rosws info --only=localname 2> /dev/null | sed 's,:, ,g'`
       COMPREPLY=( $( compgen -W "$cmdOpts" -- $cur ) )
     ;;
     set)
       if [[ $COMP_CWORD -eq 2 ]]; then
-          cmdOpts=`rosws info --only=localname 2> /dev/null | sed -s 's,:, ,g'`
+          cmdOpts=`rosws info --only=localname 2> /dev/null | sed 's,:, ,g'`
           COMPREPLY=( $( compgen -W "$cmdOpts" -- $cur ) )
       elif [[ $COMP_CWORD -eq 3 ]]; then
           cmdOpts=`rosws info ${COMP_WORDS[2]} --only=uri 2> /dev/null`
           COMPREPLY=( $( compgen -W "$cmdOpts" -- $cur ) )
       else
           if [[ ${COMP_WORDS[$(( $COMP_CWORD - 1 ))]} == "--version-new" ]]; then
-              cmdOpts=`rosws info ${COMP_WORDS[2]} --only=version 2> /dev/null|sed -s 's/,$//'`
+              cmdOpts=`rosws info ${COMP_WORDS[2]} --only=version 2> /dev/null|sed 's/,$//'`
               COMPREPLY=( $( compgen -W "$cmdOpts" -- $cur ) )
           fi
       fi

@@ -40,7 +40,7 @@ _var_undo_suf_var_name_suffix=_VAR_UNDO_SUFFIX
 
 # uses env to lookup an env var by name by the first argument $1
 _var_undo_get_env_var () {
-    echo `/usr/bin/env |grep ^$1=|sed -s 's/'"$1"'=//'`
+    echo `/usr/bin/env |grep ^$1=|sed 's/'"$1"'=//'`
 }
 
 # stores an env var with name $1 to a designated backup env var 
@@ -53,14 +53,14 @@ _var_undo_backup_diff_var () {
 
     # stores the diff pre and suffix between current and stored value of env var with name $1 
     old_value=`_var_undo_get_env_var $1$_var_undo_backup_var_name_suffix`
-    old_value_esc=`echo "$old_value" | sed -s 's,\([\[\.\\\*\^\$\"]\|\]\),\\\\\1,g'`
+    old_value_esc=`echo "$old_value" | sed 's,\([\[\.\\\*\^\$\"]\|\]\),\\\\\1,g'`
     new_value=`_var_undo_get_env_var $1`
 
     if [ -n "$old_value" -a "$new_value" != "$old_value" ]; then
         # get suffix by replacing in new var the old var with nil
         if [ -n "$new_value" -a "$new_value" != "$old_value" ]; then
-            export $1$_var_undo_suf_var_name_suffix=`echo "$new_value" |sed -s "s,.*${old_value_esc}\(.*\),\1,"`
-            export $1$_var_undo_pre_var_name_suffix=`echo "$new_value" |sed -s "s,\(.*\)${old_value_esc}.*,\1,"`
+            export $1$_var_undo_suf_var_name_suffix=`echo "$new_value" |sed "s,.*${old_value_esc}\(.*\),\1,"`
+            export $1$_var_undo_pre_var_name_suffix=`echo "$new_value" |sed "s,\(.*\)${old_value_esc}.*,\1,"`
         fi
     else
         # old value was empty
@@ -74,15 +74,15 @@ _var_undo_restore_var () {
     local new_value old_value old_prefix old_suffix old_value_esc old_prefix_esc old_suffix_esc
     # removes from the middle of a given var of name $1 previously stored prefix and suffix (that may now not be pre or suffixes anymore)
     ## escape backslash for windows paths
-    new_value=`/usr/bin/env |grep ^$1=|sed -s 's/'"$1"'=//'`
+    new_value=`/usr/bin/env |grep ^$1=|sed 's/'"$1"'=//'`
     old_value=`_var_undo_get_env_var $1$_var_undo_backup_var_name_suffix`
-    old_value_esc=`echo $old_value | sed -s 's,\([\[\.\\\*\^\$\"]\|\]\),\\\\\1,g'`
+    old_value_esc=`echo $old_value | sed 's,\([\[\.\\\*\^\$\"]\|\]\),\\\\\1,g'`
     old_prefix=`_var_undo_get_env_var $1$_var_undo_pre_var_name_suffix`
-    old_prefix_esc=`echo $old_prefix | sed -s 's,\([\[\.\\\*\^\$\"]\|\]\),\\\\\1,g'`
+    old_prefix_esc=`echo $old_prefix | sed 's,\([\[\.\\\*\^\$\"]\|\]\),\\\\\1,g'`
     old_suffix=`_var_undo_get_env_var $1$_var_undo_suf_var_name_suffix`
-    old_suffix_esc=`echo $old_suffix | sed -s 's,\([\[\.\\\*\^\$\"]\|\]\),\\\\\1,g'`
+    old_suffix_esc=`echo $old_suffix | sed 's,\([\[\.\\\*\^\$\"]\|\]\),\\\\\1,g'`
     if [ -n "$old_prefix" -o -n "$old_suffix" ]; then
-        export $1=`echo $new_value | sed -s "s,${old_prefix_esc}${old_value_esc}${old_suffix_esc},${old_value_esc},"`
+        export $1=`echo $new_value | sed "s,${old_prefix_esc}${old_value_esc}${old_suffix_esc},${old_value_esc},"`
         echo Restored var: $1
     fi
     unset $1$_var_undo_backup_var_name_suffix
