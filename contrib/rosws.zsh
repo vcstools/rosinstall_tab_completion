@@ -82,7 +82,7 @@ function _roscomplete_rosws {
               opts="-t --target-workspace"
               ;;
             info)
-              opts="-t --target-workspace --data-only --no-pkg-path --pkg-path-only --localnames-only --paths-only"
+              opts="-t --target-workspace --data-only --no-pkg-path --pkg-path-only --only --yaml"
               ;;
             *)
               ;;

@@ -116,7 +116,7 @@ _rosws_complete()
     cmdOpts="-t --target-workspace"
     ;;
   info)
-    cmdOpts="-t --target-workspace --data-only --no-pkg-path --pkg-path-only --localnames-only --paths-only"
+    cmdOpts="-t --target-workspace --data-only --no-pkg-path --pkg-path-only --only --yaml"
     ;;
   *)
     ;;
