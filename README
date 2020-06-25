@@ -1,3 +1,10 @@
+Archived
+========
+This repository has been archived due to a lack of maintainance and no longer being used in the ROS project.
+
+Content
+-------
+
 This package only provides bash completion scripts for scripts in the
 rosinstall package.
 The scripts here were moved outside of roinstall due to several reasons:
